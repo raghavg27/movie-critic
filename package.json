@@ -1,0 +1,73 @@
+{
+  "name": "movie-critic",
+  "version": "1.0.0",
+  "description": "This project is a Movie Critic Website where users can browse movies and read reviews, as well as submit their own reviews and ratings. The website stores detailed information about each movie, including its name, release date, and average rating. Users can leave reviews for movies, including a rating (out of 10) and written comments. The system automatically updates the average rating for each movie as new reviews are added. The project includes a PostgreSQL database schema to manage movies and reviews efficiently, with triggers to recalculate the average rating after each review submission.",
+  "main": "server.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/raghavg27/movie-critic.git"
+  },
+  "keywords": [
+    "movie",
+    "critic",
+    "movie",
+    "reviews",
+    "ratings",
+    "PostgreSQL",
+    "database",
+    "schema",
+    "average",
+    "rating",
+    "user",
+    "reviews",
+    "movie",
+    "database",
+    "review",
+    "system",
+    "trigger",
+    "database",
+    "design",
+    "film",
+    "ratings",
+    "movie",
+    "information",
+    "review",
+    "comments",
+    "web",
+    "application",
+    "SQL",
+    "relational",
+    "database",
+    "review",
+    "submission",
+    "user-generated",
+    "content",
+    "movie",
+    "website",
+    "data",
+    "management",
+    "movie",
+    "ratings"
+  ],
+  "author": "Raghav Gupta",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/raghavg27/movie-critic/issues"
+  },
+  "homepage": "https://github.com/raghavg27/movie-critic#readme",
+  "devDependencies": {
+    "@prisma/client": "^6.0.1",
+    "bcrypt": "^5.1.1",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "joi": "^17.13.3",
+    "jsonwebtoken": "^9.0.2",
+    "nodemon": "^3.1.7"
+  }
+}
