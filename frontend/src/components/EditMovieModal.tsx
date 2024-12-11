@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Movie } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
+const apiUrl = import.meta.env.REACT_APP_API_BASE_URL || "http://localhost:8080";
 
 interface EditMovieModalProps {
   open: boolean;
@@ -33,7 +34,7 @@ export function EditMovieModal({
     const updatedMovie = { ...movie, name, release_date: releaseDate };
 
     try {
-      const response = await fetch(`http://localhost:8080/movies/${movie.id}`, {
+      const response = await fetch(`${apiUrl}/movies/${movie.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedMovie),

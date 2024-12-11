@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea"; // Add textarea for comments
 import { Review } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
+const apiUrl = import.meta.env.REACT_APP_API_BASE_URL || "http://localhost:8080";
 
 interface EditReviewModalProps {
   open: boolean;
@@ -40,16 +41,13 @@ export function EditReviewModal({
     };
 
     try {
-      const response = await fetch(
-        `http://localhost:8080/reviews/${review.id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(updatedReview),
-        }
-      );
+      const response = await fetch(`${apiUrl}/reviews/${review.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedReview),
+      });
 
       if (!response.ok) {
         throw new Error("Failed to update review");

@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Movie } from "@/types";
 import { useState } from "react";
 import { useToast } from "./ui/use-toast";
+const apiUrl = import.meta.env.REACT_APP_API_BASE_URL || "http://localhost:8080";
 
 interface MovieFormProps {
   open: boolean;
@@ -51,7 +52,7 @@ export function MovieForm({
 
     try {
       // API call to add a new movie
-      const response = await fetch("http://localhost:8080/movies", {
+      const response = await fetch(`${apiUrl}/movies`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

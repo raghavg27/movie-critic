@@ -8,6 +8,7 @@ import { ReviewForm } from "@/components/ReviewForm";
 import { Search } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { EditMovieModal } from "@/components/EditMovieModal";
+const apiUrl = import.meta.env.REACT_APP_API_BASE_URL || "http://localhost:8080";
 
 const Index = () => {
   const [movies, setMovies] = useState<Movie[]>([]);
@@ -22,7 +23,7 @@ const Index = () => {
 
   const fetchMovies = async () => {
     try {
-      const response = await fetch("http://localhost:8080/movies");
+      const response = await fetch(`${apiUrl}/movies`);
       if (!response.ok) throw new Error("Failed to fetch movies");
       const data = await response.json();
       setMovies(data);
@@ -50,7 +51,7 @@ const Index = () => {
   // Handle adding a new review
   const handleAddReview = async (reviewData: Omit<Movie, "id" | "movieId">) => {
     try {
-      const response = await fetch("http://localhost:8080/reviews", {
+      const response = await fetch(`${apiUrl}/reviews`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -77,7 +78,7 @@ const Index = () => {
   // Delete movie
   const handleDelete = async (id: string) => {
     try {
-      const response = await fetch(`http://localhost:8080/movies/${id}`, {
+      const response = await fetch(`${apiUrl}/movies/${id}`, {
         method: "DELETE",
       });
 

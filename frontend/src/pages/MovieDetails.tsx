@@ -7,6 +7,7 @@ import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { EditReviewModal } from "@/components/EditReviewModal";
 import { MovieForm } from "@/components/MovieForm";
+const apiUrl = import.meta.env.REACT_APP_API_BASE_URL || "http://localhost:8080";
 
 const MovieDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -24,7 +25,7 @@ const MovieDetails = () => {
   const fetchMovieDetails = () => {
     if (!id) return;
 
-    fetch(`http://localhost:8080/movies/${id}`)
+    fetch(`${apiUrl}/movies/${id}`)
       .then((response) => response.json())
       .then((data) => {
         setMovie(data);
@@ -43,7 +44,7 @@ const MovieDetails = () => {
   const fetchReviews = () => {
     if (!id) return;
 
-    fetch(`http://localhost:8080/reviews/movie/${id}`)
+    fetch(`${apiUrl}/reviews/movie/${id}`)
       .then((response) => response.json())
       .then((data) => {
         if (Array.isArray(data)) {
@@ -71,7 +72,7 @@ const MovieDetails = () => {
 
   // Handle adding a new review
   const handleAddReview = (reviewData: Omit<Review, "id" | "movieId">) => {
-    fetch("http://localhost:8080/reviews", {
+    fetch(`${apiUrl}/reviews`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -106,7 +107,7 @@ const MovieDetails = () => {
 
   // Handle deleting a review
   const handleDeleteReview = (reviewId: string) => {
-    fetch(`http://localhost:8080/reviews/${reviewId}`, {
+    fetch(`${apiUrl}/reviews/${reviewId}`, {
       method: "DELETE",
     })
       .then(() => {

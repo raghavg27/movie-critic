@@ -17,6 +17,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+const apiUrl = import.meta.env.REACT_APP_API_BASE_URL || "http://localhost:8080";
 
 interface ReviewFormProps {
   open: boolean;
@@ -46,7 +47,7 @@ export function ReviewForm({
       // Fetch movies from the backend if no specific movie is passed
       const fetchMovies = async () => {
         try {
-          const response = await fetch("http://localhost:8080/movies");
+          const response = await fetch(`${apiUrl}/movies`);
           if (!response.ok) throw new Error("Failed to fetch movies");
           const data = await response.json();
           setMovies(data);
