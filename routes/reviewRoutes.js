@@ -7,12 +7,12 @@ const prisma = new PrismaClient();
 router.post("/", async (req, res) => {
   const { movie_id, reviewer_name, rating, review_comments } = req.body;
 
-  // Validate input data
+  // Validate 
   if (!movie_id || !rating) {
     return res.status(400).json({ error: "Movie ID and rating are required" });
   }
 
-  // Validate that rating is within bounds (0-10)
+  // rating is within bounds (0-10)
   if (rating < 0 || rating > 10) {
     return res.status(400).json({ error: "Rating must be between 0 and 10" });
   }
@@ -99,7 +99,7 @@ router.put("/:reviewId", async (req, res) => {
   const { reviewId } = req.params;
   const { reviewer_name, rating, review_comments } = req.body;
 
-  // Validate that rating is within bounds (0-10)
+  // rating is within bounds (0-10)
   if (rating < 0 || rating > 10) {
     return res.status(400).json({ error: "Rating must be between 0 and 10" });
   }
@@ -164,7 +164,7 @@ router.get("/search", async (req, res) => {
       where: {
         reviewer_name: {
           contains: reviewer_name,
-          mode: "insensitive", // Case-insensitive search
+          mode: "insensitive",
         },
       },
     });

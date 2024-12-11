@@ -7,7 +7,6 @@ const prisma = new PrismaClient();
 router.post("/", async (req, res) => {
   const { name, release_date, average_rating } = req.body;
 
-  // Validate input
   if (!name || !release_date) {
     return res.status(400).json({
       error: "Movie name and release date are required",
@@ -95,7 +94,6 @@ router.put("/:movieId", async (req, res) => {
   const { movieId } = req.params;
   const { name, release_date, average_rating } = req.body;
 
-  // Validate input
   if (!name || !release_date) {
     return res.status(400).json({
       error: "Movie name and release date are required",
@@ -221,7 +219,7 @@ router.get("/search", async (req, res) => {
       where: {
         name: {
           contains: name,
-          mode: "insensitive", // Case insensitive search
+          mode: "insensitive",
         },
       },
     });
