@@ -8,7 +8,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "npx prisma db pull && node server.js",
+    "start": "npx prisma db pull && prisma generate && node server.js",
     "dev": "nodemon server.js",
     "build": "prisma generate && node server.js"
   },
