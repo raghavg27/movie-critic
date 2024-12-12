@@ -30,11 +30,10 @@ export function MovieForm({
   );
   const { toast } = useToast();
 
-  // Function to call backend and add movie
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate the fields
     if (!name || !releaseDate) {
       toast({
         title: "Error",
@@ -44,14 +43,12 @@ export function MovieForm({
       return;
     }
 
-    // Create the movie object to send to the backend
     const newMovie = {
       name,
       release_date: releaseDate,
     };
 
     try {
-      // API call to add a new movie
       const response = await fetch(`${apiUrl}/movies`, {
         method: "POST",
         headers: {
@@ -60,14 +57,12 @@ export function MovieForm({
         body: JSON.stringify(newMovie),
       });
 
-      // Check if the response is successful
       if (!response.ok) {
         throw new Error("Failed to add movie");
       }
 
       const movie = await response.json();
 
-      // Notify the user of success
       toast({
         title: "Success",
         description: `Movie added successfully`,
@@ -76,12 +71,11 @@ export function MovieForm({
       // Call onSubmit with the new movie data
       onSubmit(newMovie);
 
-      // Reset form fields and close dialog
+      // Reset form fields
       setName("");
       setReleaseDate("");
       onOpenChange(false);
     } catch (error) {
-      // Handle errors (e.g., network issues, server errors)
       toast({
         title: "Error",
         description: "Something went wrong. Please try again later.",

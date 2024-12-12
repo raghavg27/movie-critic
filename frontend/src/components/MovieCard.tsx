@@ -12,10 +12,9 @@ interface MovieCardProps {
 }
 
 export function MovieCard({ movie, onEdit, onDelete }: MovieCardProps) {
-  // Convert average_rating to a number and validate
   const averageRating = !isNaN(Number(movie.average_rating))
-    ? Number(movie.average_rating).toFixed(2) // Convert and format as a decimal
-    : "N/A"; // Fallback if it's not a valid number
+    ? Number(movie.average_rating).toFixed(2)
+    : "N/A";
 
   return (
     <Card className="bg-[#E0DEFD] p-6 space-y-4 hover:shadow-md transition-shadow duration-200">
@@ -42,7 +41,7 @@ export function MovieCard({ movie, onEdit, onDelete }: MovieCardProps) {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => onDelete(String(movie.id))} // Trigger delete action
+          onClick={() => onDelete(String(movie.id))}
           className="h-8 w-8 text-destructive hover:text-destructive/90"
         >
           <Trash2 className="h-4 w-4" />

@@ -16,8 +16,8 @@ const Index = () => {
   const [isAddMovieOpen, setIsAddMovieOpen] = useState(false);
   const [isAddReviewOpen, setIsAddReviewOpen] = useState(false);
   const [isDeleteMovie, setIsDeleteMovie] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false); // Controls modal
-  const [currentMovie, setCurrentMovie] = useState<Movie | null>(null); // Selected movie
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [currentMovie, setCurrentMovie] = useState<Movie | null>(null);
 
   const { toast } = useToast();
 
@@ -103,8 +103,8 @@ const Index = () => {
   };
 
   const handleEdit = (movie: Movie) => {
-    setCurrentMovie(movie); // Set selected movie
-    setIsEditModalOpen(true); // Open modal
+    setCurrentMovie(movie);
+    setIsEditModalOpen(true);
   };
 
   const handleSaveMovie = (updatedMovie: Movie) => {
@@ -119,7 +119,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header Section */}
       <div className="bg-gray-100 border-b border-gray-200">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-800">MOVIECRITIC</h1>
@@ -141,7 +140,6 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col gap-8 max-w-7xl mx-auto">
           <h2 className="text-4xl font-bold text-gray-800">
@@ -159,7 +157,10 @@ const Index = () => {
           </div>
 
           {filteredMovies.length === 0 ? (
-            <p className="text-center text-gray-500 mt-8">No movies found</p>
+            <p className="text-center text-gray-500 mt-8">
+              Free instance spins down with inactivity, which can delay
+              requests by 50 seconds or more. Please Wait.
+            </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredMovies.map((movie) => (
@@ -174,19 +175,17 @@ const Index = () => {
           )}
         </div>
 
-        {/* Movie Form for Adding Movies */}
         <MovieForm
           open={isAddMovieOpen}
           onOpenChange={setIsAddMovieOpen}
           onSubmit={(movieData) => {}}
         />
 
-        {/* Review Form for Adding Reviews */}
         <ReviewForm
           open={isAddReviewOpen}
           onOpenChange={setIsAddReviewOpen}
           onSubmit={handleAddReview}
-          movie={null} // Pass movie as null
+          movie={null}
         />
 
         <EditMovieModal

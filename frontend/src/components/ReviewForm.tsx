@@ -44,7 +44,6 @@ export function ReviewForm({
 
   useEffect(() => {
     if (!movie) {
-      // Fetch movies from the backend if no specific movie is passed
       const fetchMovies = async () => {
         try {
           const response = await fetch(`${apiUrl}/movies`);

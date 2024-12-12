@@ -42,8 +42,8 @@ export function EditMovieModal({
 
       if (!response.ok) throw new Error("Failed to update movie");
 
-      onSave(updatedMovie); // Update movie list
-      onClose(); // Close modal
+      onSave(updatedMovie);
+      onClose();
       toast({
         title: "Success",
         description: "Movie edited successfully",

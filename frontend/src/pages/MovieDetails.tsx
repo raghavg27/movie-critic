@@ -16,12 +16,11 @@ const MovieDetails = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isAddReviewOpen, setIsAddReviewOpen] = useState(false);
   const [isAddMovieOpen, setIsAddMovieOpen] = useState(false);
-  const [isEditReviewOpen, setIsEditReviewOpen] = useState(false); // Controls edit modal visibility
-  const [currentReview, setCurrentReview] = useState<Review | null>(null); // Currently selected review for editing
+  const [isEditReviewOpen, setIsEditReviewOpen] = useState(false);
+  const [currentReview, setCurrentReview] = useState<Review | null>(null);
 
   const { toast } = useToast();
 
-  // Function to fetch movie details
   const fetchMovieDetails = () => {
     if (!id) return;
 
@@ -40,7 +39,7 @@ const MovieDetails = () => {
       });
   };
 
-  // Function to fetch reviews
+
   const fetchReviews = () => {
     if (!id) return;
 
@@ -51,7 +50,7 @@ const MovieDetails = () => {
           setReviews(data);
         } else {
           console.error("Expected an array of reviews, but received:", data);
-          setReviews([]); // Fallback to empty array if data is not an array
+          setReviews([]);
         }
       })
       .catch((error) => {
@@ -64,7 +63,6 @@ const MovieDetails = () => {
       });
   };
 
-  // Get movie details and reviews when the component mounts
   useEffect(() => {
     fetchMovieDetails();
     fetchReviews();
@@ -131,8 +129,8 @@ const MovieDetails = () => {
   };
 
   const handleEditReview = (review: Review) => {
-    setCurrentReview(review); // Set the selected review for editing
-    setIsEditReviewOpen(true); // Open the edit modal
+    setCurrentReview(review);
+    setIsEditReviewOpen(true);
   };
 
   const handleSaveReview = (updatedReview: Review) => {
@@ -144,11 +142,11 @@ const MovieDetails = () => {
     fetchMovieDetails(); // Refetch movie details to update average_rating
   };
 
-  // Log movie state before rendering to verify it's updated
+
   console.log("Current movie state: ", movie);
 
   if (!movie) {
-    return <div>Loading...</div>; // Show a loading message while the movie is being fetched
+    return <div>Loading...</div>;
   }
 
   return (
@@ -234,7 +232,6 @@ const MovieDetails = () => {
             )}
           </div>
 
-          {/* Review Form Modal */}
           <ReviewForm
             open={isAddReviewOpen}
             onOpenChange={setIsAddReviewOpen}
