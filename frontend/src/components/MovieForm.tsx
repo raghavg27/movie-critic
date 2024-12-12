@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Movie } from "@/types";
 import { useState } from "react";
 import { useToast } from "./ui/use-toast";
-const apiUrl = import.meta.env.REACT_APP_API_BASE_URL || "http://localhost:8080";
+const apiUrl = "https://movie-critic-zdx3.onrender.com";
 
 interface MovieFormProps {
   open: boolean;

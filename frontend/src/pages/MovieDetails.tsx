@@ -7,7 +7,7 @@ import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { EditReviewModal } from "@/components/EditReviewModal";
 import { MovieForm } from "@/components/MovieForm";
-const apiUrl = import.meta.env.REACT_APP_API_BASE_URL || "http://localhost:8080";
+const apiUrl = "https://movie-critic-zdx3.onrender.com";
 
 const MovieDetails = () => {
   const { id } = useParams<{ id: string }>();
