@@ -8,7 +8,7 @@ import { ReviewForm } from "@/components/ReviewForm";
 import { Search } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { EditMovieModal } from "@/components/EditMovieModal";
-const apiUrl = import.meta.env.REACT_APP_API_BASE_URL || "http://localhost:8080";
+const apiUrl = "https://movie-critic-zdx3.onrender.com";
 
 const Index = () => {
   const [movies, setMovies] = useState<Movie[]>([]);
