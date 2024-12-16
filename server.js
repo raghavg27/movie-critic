@@ -1,10 +1,12 @@
 // Imports
 const express = require("express");
-const app = express();
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const movieRoutes = require("./routes/movieRoutes")
 const reviewRoutes = require("./routes/reviewRoutes");
+
+// Initialisation
+const app = express();
 
 // Middlewares
 app.use(express.json());

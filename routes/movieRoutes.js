@@ -1,6 +1,9 @@
+// Imports
 const express = require("express");
-const router = express.Router();
 const { PrismaClient } = require("@prisma/client");
+
+// Initialisations
+const router = express.Router();
 const prisma = new PrismaClient();
 
 // Add a new movie

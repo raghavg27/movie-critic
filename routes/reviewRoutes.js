@@ -1,13 +1,16 @@
+// Imports
 const express = require("express");
+const prisma = new PrismaClient();
+
+// Initialisations
 const router = express.Router();
 const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
 
 // Add a review
 router.post("/", async (req, res) => {
   const { movie_id, reviewer_name, rating, review_comments } = req.body;
 
-  // Validate 
+  // Validate
   if (!movie_id || !rating) {
     return res.status(400).json({ error: "Movie ID and rating are required" });
   }

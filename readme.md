@@ -42,6 +42,32 @@ To deploy this project run
 ### Database Features
 - **PostgreSQL Database**: A robust schema is designed for efficient management of movies and user reviews.
 - **Triggers**: Automatic recalculation of average ratings using database triggers upon submission of new reviews.
+
+```
+    CREATE OR REPLACE FUNCTION update_movie_average_rating()
+    RETURNS TRIGGER AS $$
+    BEGIN
+        -- Calculate the new average rating for the movie
+        UPDATE movies
+        SET average_rating = (
+            SELECT AVG(rating)
+            FROM reviews
+            WHERE movie_id = NEW.movie_id
+        )
+        WHERE id = NEW.movie_id;
+
+        RETURN NEW;
+    END;
+    $$ LANGUAGE plpgsql;
+```
+
+```
+CREATE TRIGGER update_average_rating_after_review
+AFTER INSERT ON reviews
+FOR EACH ROW
+EXECUTE FUNCTION update_movie_average_rating();
+```
+
 - **Efficient Data Management**: Optimized schema for relational data management, ensuring quick data retrieval and updates.
 
 ### Development Features
