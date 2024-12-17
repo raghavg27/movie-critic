@@ -27,6 +27,7 @@ const Index = () => {
       if (!response.ok) throw new Error("Failed to fetch movies");
       const data = await response.json();
       setMovies(data);
+      setIsDeleteMovie(false);
     } catch (error) {
       console.error("Error fetching movies:", error);
       toast({
@@ -38,7 +39,7 @@ const Index = () => {
   };
 
 
-  // Fetch movies from the backend API when the component mounts
+  // Fetch movies from the backend API when the component mounts and updates
   useEffect(() => {
     fetchMovies();
   }, [isAddMovieOpen, isAddReviewOpen, toast, isDeleteMovie]);
