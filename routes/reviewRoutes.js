@@ -1,10 +1,10 @@
 // Imports
 const express = require("express");
-const prisma = new PrismaClient();
+const { PrismaClient } = require("@prisma/client");
 
 // Initialisations
 const router = express.Router();
-const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
 
 // Add a review
 router.post("/", async (req, res) => {
