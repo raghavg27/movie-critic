@@ -1,9 +1,5 @@
-import { useState, useEffect } from "react";
-import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useNavigate } from "react-router-dom";
 import { Movie, Review } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -132,37 +128,6 @@ const MovieDetails = () => {
     },
   });
 
-  // Edit review mutation
-  const editReviewMutation = useMutation({
-    mutationFn: async (updatedReview: Review) => {
-      const response = await fetch(`${apiUrl}/reviews/${updatedReview.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updatedReview),
-      });
-      if (!response.ok) throw new Error("Failed to update review");
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Review updated successfully",
-      });
-      setIsEditReviewOpen(false);
-      queryClient.invalidateQueries(["reviews", id]);
-      queryClient.invalidateQueries(["movie", id]); // Refetch movie details to update average_rating
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to update review",
-        variant: "destructive",
-      });
-    },
-  });
-
   const handleAddReview = (reviewData: Omit<Review, "id" | "movieId">) => {
     addReviewMutation.mutate(reviewData);
   };
@@ -174,10 +139,6 @@ const MovieDetails = () => {
   const handleEditReview = (review: Review) => {
     setCurrentReview(review);
     setIsEditReviewOpen(true);
-  };
-
-  const handleSaveReview = (updatedReview: Review) => {
-    editReviewMutation.mutate(updatedReview);
   };
 
   if (isMovieLoading || isReviewsLoading) {
@@ -286,9 +247,20 @@ const MovieDetails = () => {
 
           <EditReviewModal
             open={isEditReviewOpen}
-            onClose={() => setIsEditReviewOpen(false)}
+            onClose={() => {
+              setIsEditReviewOpen(false);
+              setCurrentReview(null); // Reset the current review
+            }}
             review={currentReview}
-            onSave={handleSaveReview}
+            onSave={(updatedReview) =>{
+              // Invalidate queries to refetch data
+              queryClient.invalidateQueries(["reviews", id]);
+              queryClient.invalidateQueries(["movie", id]);
+              toast({
+                title: "Success",
+                description: "Review updated successfully",
+              });
+            }}
           />
         </div>
       </div>

@@ -1,3 +1,4 @@
+import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Movie } from "@/types";
 import { useState } from "react";
 import { useToast } from "./ui/use-toast";
+
 const apiUrl = "http://localhost:8080";
 
 interface MovieFormProps {
@@ -30,10 +32,50 @@ export function MovieForm({
   );
   const { toast } = useToast();
 
-  
+  // Define the mutation for adding/updating a movie
+  const addMovieMutation = useMutation({
+    mutationFn: async (newMovie: Omit<Movie, "id" | "averageRating">) => {
+      const response = await fetch(`${apiUrl}/movies`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newMovie),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to add movie");
+      }
+
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Success",
+        description: `Movie ${initialMovie ? "updated" : "added"} successfully`,
+      });
+
+      // Call the onSubmit prop with the new movie data
+      onSubmit(data);
+
+      // Reset form fields and close the dialog
+      setName("");
+      setReleaseDate("");
+      onOpenChange(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again later.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validation
     if (!name || !releaseDate) {
       toast({
         title: "Error",
@@ -48,40 +90,8 @@ export function MovieForm({
       release_date: releaseDate,
     };
 
-    try {
-      const response = await fetch(`${apiUrl}/movies`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newMovie),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to add movie");
-      }
-
-      const movie = await response.json();
-
-      toast({
-        title: "Success",
-        description: `Movie added successfully`,
-      });
-
-      // Call onSubmit with the new movie data
-      onSubmit(newMovie);
-
-      // Reset form fields
-      setName("");
-      setReleaseDate("");
-      onOpenChange(false);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Something went wrong. Please try again later.",
-        variant: "destructive",
-      });
-    }
+    // Trigger the mutation
+    addMovieMutation.mutate(newMovie);
   };
 
   return (
@@ -115,8 +125,16 @@ export function MovieForm({
               onChange={(e) => setReleaseDate(e.target.value)}
             />
           </div>
-          <Button type="submit" className="w-full">
-            {initialMovie ? "Update Movie" : "Create Movie"}
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={addMovieMutation.isPending} // Disable button while mutation is in progress
+          >
+            {addMovieMutation.isPending
+              ? "Submitting..."
+              : initialMovie
+              ? "Update Movie"
+              : "Create Movie"}
           </Button>
         </form>
       </DialogContent>

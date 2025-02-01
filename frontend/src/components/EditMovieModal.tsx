@@ -1,3 +1,4 @@
+import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import {
   Dialog,
@@ -9,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Movie } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
+
 const apiUrl = "http://localhost:8080";
 
 interface EditMovieModalProps {
@@ -28,34 +30,50 @@ export function EditMovieModal({
   const [name, setName] = useState(movie?.name || "");
   const [releaseDate, setReleaseDate] = useState(movie?.release_date || "");
 
-  const handleSave = async () => {
-    if (!movie) return;
-
-    const updatedMovie = { ...movie, name, release_date: releaseDate };
-
-    try {
-      const response = await fetch(`${apiUrl}/movies/${movie.id}`, {
+  // Define the mutation for updating a movie
+  const updateMovieMutation = useMutation({
+    mutationFn: async (updatedMovie: Movie) => {
+      const response = await fetch(`${apiUrl}/movies/${updatedMovie.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedMovie),
       });
 
-      if (!response.ok) throw new Error("Failed to update movie");
+      if (!response.ok) {
+        throw new Error("Failed to update movie");
+      }
 
-      onSave(updatedMovie);
-      onClose();
+      return response.json();
+    },
+    onSuccess: (data) => {
       toast({
         title: "Success",
-        description: "Movie edited successfully",
+        description: "Movie updated successfully",
       });
-    } catch (error) {
+
+      // Call the onSave prop with the updated movie data
+      onSave(data);
+
+      // Close the modal
+      onClose();
+    },
+    onError: (error) => {
       console.error("Error updating movie:", error);
       toast({
         title: "Error",
         description: "Something went wrong. Please try again later.",
         variant: "destructive",
       });
-    }
+    },
+  });
+
+  const handleSave = async () => {
+    if (!movie) return;
+
+    const updatedMovie = { ...movie, name, release_date: releaseDate };
+
+    // Trigger the mutation
+    updateMovieMutation.mutate(updatedMovie);
   };
 
   return (
@@ -98,8 +116,12 @@ export function EditMovieModal({
             <Button variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" className="w-full">
-              Save Changes
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={updateMovieMutation.isPending} // Disable button while mutation is in progress
+            >
+              {updateMovieMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         </form>

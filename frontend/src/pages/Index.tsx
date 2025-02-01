@@ -125,11 +125,7 @@ const Index = () => {
   };
 
   const handleSaveMovie = (updatedMovie: Movie) => {
-    setMovies(
-      movies?.map((movie) =>
-        movie.id === updatedMovie.id ? updatedMovie : movie
-      ) || []
-    );
+   queryClient.invalidateQueries(["movies"]);
   };
 
   return (

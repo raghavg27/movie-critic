@@ -101,18 +101,27 @@ router.put("/:reviewId", async (req, res) => {
   const { reviewId } = req.params;
   const { reviewer_name, rating, review_comments } = req.body;
 
-  // rating is within bounds (0-10)
-  if (rating < 0 || rating > 10) {
-    return res.status(400).json({ error: "Rating must be between 0 and 10" });
+  // Ensure reviewId is a valid number
+  const reviewIdNum = parseInt(reviewId, 10);
+  if (isNaN(reviewIdNum)) {
+    return res.status(400).json({ error: "Invalid review ID" });
+  }
+
+  // Ensure rating is within bounds (0-10) and a valid number
+  const ratingNum = parseFloat(rating);
+  if (isNaN(ratingNum) || ratingNum < 0 || ratingNum > 10) {
+    return res
+      .status(400)
+      .json({ error: "Rating must be a number between 0 and 10" });
   }
 
   try {
     const updatedReview = await prisma.reviews.update({
-      where: { id: parseInt(reviewId) },
+      where: { id: reviewIdNum },
       data: {
-        reviewer_name,
-        rating: parseFloat(rating),
-        review_comments,
+        reviewer_name: reviewer_name || null, // Ensure default value if missing
+        review_comments: review_comments || null,
+        rating: ratingNum,
       },
     });
 
@@ -128,6 +137,7 @@ router.put("/:reviewId", async (req, res) => {
     res.status(500).json({ error: "Failed to update review" });
   }
 });
+
 
 // Delete a review by ID
 router.delete("/:reviewId", async (req, res) => {
