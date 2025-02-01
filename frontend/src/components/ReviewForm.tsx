@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -17,6 +18,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+
 const apiUrl = "http://localhost:8080";
 
 interface ReviewFormProps {
@@ -35,36 +37,37 @@ export function ReviewForm({
   const [reviewerName, setReviewerName] = useState("");
   const [rating, setRating] = useState("");
   const [comments, setComments] = useState("");
-  const [movies, setMovies] = useState<Movie[]>([]);
   const [selectedMovieId, setSelectedMovieId] = useState<string | null>(
     movie ? movie.id : null
   );
-  const [selectedMovieName, setSelectedMovieName] = useState("")
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (!movie) {
-      const fetchMovies = async () => {
-        try {
-          const response = await fetch(`${apiUrl}/movies`);
-          if (!response.ok) throw new Error("Failed to fetch movies");
-          const data = await response.json();
-          setMovies(data);
-        } catch (error) {
-          console.error("Error fetching movies:", error);
-          toast({
-            title: "Error",
-            description: "Failed to load movies",
-            variant: "destructive",
-          });
-        }
-      };
-      fetchMovies();
-    }
-  }, [movie, toast]);
+  // Fetch movies using React Query
+  const {
+    data: movies,
+    isLoading,
+    isError,
+  } = useQuery<Movie[]>({
+    queryKey: ["movies"],
+    queryFn: async () => {
+      const response = await fetch(`${apiUrl}/movies`);
+      if (!response.ok) throw new Error("Failed to fetch movies");
+      return response.json();
+    },
+    enabled: !movie, // Only fetch movies if no specific movie is provided
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to load movies",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validation
     if (!selectedMovieId || !rating || !comments) {
       toast({
         title: "Error",
@@ -84,6 +87,7 @@ export function ReviewForm({
       return;
     }
 
+    // Call the onSubmit prop with the review data
     onSubmit({
       movie_id: Number(selectedMovieId),
       reviewer_name: reviewerName || undefined,
@@ -91,6 +95,7 @@ export function ReviewForm({
       review_comments: comments,
     });
 
+    // Reset form fields and close the dialog
     setReviewerName("");
     setRating("");
     setComments("");
@@ -106,6 +111,7 @@ export function ReviewForm({
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Movie selection dropdown (only shown if no specific movie is provided) */}
           {!movie && (
             <div className="space-y-2">
               <label htmlFor="movie" className="text-sm font-medium">
@@ -116,15 +122,27 @@ export function ReviewForm({
                   <SelectValue placeholder="Choose a movie" />
                 </SelectTrigger>
                 <SelectContent>
-                  {movies.map((movie) => (
-                    <SelectItem key={movie.id} value={movie.id}>
-                      {movie.name}
+                  {isLoading ? (
+                    <SelectItem value="loading" disabled>
+                      Loading movies...
                     </SelectItem>
-                  ))}
+                  ) : isError ? (
+                    <SelectItem value="error" disabled>
+                      Failed to load movies
+                    </SelectItem>
+                  ) : (
+                    movies?.map((movie) => (
+                      <SelectItem key={movie.id} value={movie.id}>
+                        {movie.name}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
           )}
+
+          {/* Reviewer name input */}
           <div className="space-y-2">
             <label htmlFor="reviewerName" className="text-sm font-medium">
               Your Name (optional)
@@ -136,6 +154,8 @@ export function ReviewForm({
               placeholder="Enter your name"
             />
           </div>
+
+          {/* Rating input */}
           <div className="space-y-2">
             <label htmlFor="rating" className="text-sm font-medium">
               Rating (0-10)
@@ -151,6 +171,8 @@ export function ReviewForm({
               placeholder="Enter rating"
             />
           </div>
+
+          {/* Review comments textarea */}
           <div className="space-y-2">
             <label htmlFor="comments" className="text-sm font-medium">
               Review Comments
@@ -163,6 +185,8 @@ export function ReviewForm({
               rows={4}
             />
           </div>
+
+          {/* Submit button */}
           <Button type="submit" className="w-full">
             Submit Review
           </Button>

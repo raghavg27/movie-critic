@@ -8,10 +8,11 @@ import { ReviewForm } from "@/components/ReviewForm";
 import { Search } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { EditMovieModal } from "@/components/EditMovieModal";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
 const apiUrl = "http://localhost:8080";
 
 const Index = () => {
-  const [movies, setMovies] = useState<Movie[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddMovieOpen, setIsAddMovieOpen] = useState(false);
   const [isAddReviewOpen, setIsAddReviewOpen] = useState(false);
@@ -20,38 +21,41 @@ const Index = () => {
   const [currentMovie, setCurrentMovie] = useState<Movie | null>(null);
 
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const fetchMovies = async () => {
-    try {
+  const {
+    data: movies,
+    error,
+    isLoading,
+  } = useQuery<Movie[], Error>({
+    queryKey: ["movies"],
+    queryFn: async () => {
       const response = await fetch(`${apiUrl}/movies`);
       if (!response.ok) throw new Error("Failed to fetch movies");
-      const data = await response.json();
-      setMovies(data);
-      setIsDeleteMovie(false);
-    } catch (error) {
-      console.error("Error fetching movies:", error);
+      return response.json();
+    },
+    onError: (error) => {
       toast({
         title: "Error",
         description: "Failed to load movies",
         variant: "destructive",
       });
-    }
-  };
+    },
+  });
 
-
-  // Fetch movies from the backend API when the component mounts and updates
+  // Automatically refetch movies when isAddMovieOpen, isAddReviewOpen, or isDeleteMovie changes
   useEffect(() => {
-    fetchMovies();
-  }, [isAddMovieOpen, isAddReviewOpen, toast, isDeleteMovie]);
+    queryClient.invalidateQueries(["movies"]);
+  }, [isAddMovieOpen, isAddReviewOpen, isDeleteMovie, queryClient]);
 
-
-  const filteredMovies = movies.filter((movie) =>
-    movie.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredMovies =
+    movies?.filter((movie) =>
+      movie.name.toLowerCase().includes(searchQuery.toLowerCase())
+    ) || [];
 
   // Handle adding a new review
-  const handleAddReview = async (reviewData: Omit<Movie, "id" | "movieId">) => {
-    try {
+  const addReviewMutation = useMutation({
+    mutationFn: async (reviewData: Omit<Movie, "id" | "movieId">) => {
       const response = await fetch(`${apiUrl}/reviews`, {
         method: "POST",
         headers: {
@@ -60,47 +64,59 @@ const Index = () => {
         body: JSON.stringify(reviewData),
       });
       if (!response.ok) throw new Error("Failed to add review");
+      return response.json();
+    },
+    onSuccess: () => {
       toast({
         title: "Success",
         description: "Review added successfully",
       });
       setIsAddReviewOpen(false);
-      fetchMovies();
-    } catch (error) {
+      queryClient.invalidateQueries(["movies"]);
+    },
+    onError: (error) => {
       console.error("Error adding review:", error);
       toast({
         title: "Error",
         description: "Failed to add review",
         variant: "destructive",
       });
-    }
+    },
+  });
+
+  const handleAddReview = async (reviewData: Omit<Movie, "id" | "movieId">) => {
+    addReviewMutation.mutate(reviewData);
   };
 
   // Delete movie
-  const handleDelete = async (id: string) => {
-    try {
+  const deleteMovieMutation = useMutation({
+    mutationFn: async (id: string) => {
       const response = await fetch(`${apiUrl}/movies/${id}`, {
         method: "DELETE",
       });
-
       if (!response.ok) throw new Error("Failed to delete movie");
-
-      // Update state to remove the deleted movie
-      setMovies(movies.filter((movie) => movie.id !== id));
-
+      return id;
+    },
+    onSuccess: (id) => {
       toast({
         title: "Success",
         description: "Deleted movie",
       });
       setIsDeleteMovie(true);
-    } catch (error) {
+      queryClient.invalidateQueries(["movies"]);
+    },
+    onError: (error) => {
       console.error("Error deleting movie:", error);
       toast({
         title: "Error",
         description: "Failed to delete movie",
         variant: "destructive",
       });
-    }
+    },
+  });
+
+  const handleDelete = async (id: string) => {
+    deleteMovieMutation.mutate(id);
   };
 
   const handleEdit = (movie: Movie) => {
@@ -110,13 +126,11 @@ const Index = () => {
 
   const handleSaveMovie = (updatedMovie: Movie) => {
     setMovies(
-      movies.map((movie) =>
+      movies?.map((movie) =>
         movie.id === updatedMovie.id ? updatedMovie : movie
-      )
+      ) || []
     );
   };
-
-
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -157,10 +171,12 @@ const Index = () => {
             />
           </div>
 
-          {filteredMovies.length === 0 ? (
+          {isLoading ? (
+            <p className="text-center text-gray-500 mt-8">Loading...</p>
+          ) : filteredMovies.length === 0 ? (
             <p className="text-center text-gray-500 mt-8">
-              Free instance spins down with inactivity, which can delay
-              requests by 50 seconds or more. Please Wait.
+              Free instance spins down with inactivity, which can delay requests
+              by 50 seconds or more. Please Wait.
             </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

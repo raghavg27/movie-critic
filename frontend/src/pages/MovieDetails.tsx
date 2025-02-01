@@ -1,4 +1,9 @@
 import { useState, useEffect } from "react";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useParams, useNavigate } from "react-router-dom";
 import { Movie, Review } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -7,125 +12,163 @@ import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { EditReviewModal } from "@/components/EditReviewModal";
 import { MovieForm } from "@/components/MovieForm";
+
 const apiUrl = "http://localhost:8080";
 
 const MovieDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [movie, setMovie] = useState<Movie | null>(null);
-  const [reviews, setReviews] = useState<Review[]>([]);
   const [isAddReviewOpen, setIsAddReviewOpen] = useState(false);
   const [isAddMovieOpen, setIsAddMovieOpen] = useState(false);
   const [isEditReviewOpen, setIsEditReviewOpen] = useState(false);
   const [currentReview, setCurrentReview] = useState<Review | null>(null);
 
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const fetchMovieDetails = () => {
-    if (!id) return;
-
-    fetch(`${apiUrl}/movies/${id}`)
-      .then((response) => response.json())
-      .then((data) => {
-        setMovie(data);
-      })
-      .catch((error) => {
-        console.error("Error getting movie:", error);
-        toast({
-          title: "Error",
-          description: "Failed to get movie details",
-          variant: "destructive",
-        });
+  // Fetch movie details
+  const {
+    data: movie,
+    isLoading: isMovieLoading,
+    error: movieError,
+  } = useQuery<Movie>({
+    queryKey: ["movie", id],
+    queryFn: async () => {
+      const response = await fetch(`${apiUrl}/movies/${id}`);
+      if (!response.ok) throw new Error("Failed to fetch movie details");
+      return response.json();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to load movie details",
+        variant: "destructive",
       });
-  };
+    },
+  });
 
-
-  const fetchReviews = () => {
-    if (!id) return;
-
-    fetch(`${apiUrl}/reviews/movie/${id}`)
-      .then((response) => response.json())
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setReviews(data);
-        } else {
-          console.error("Expected an array of reviews, but received:", data);
-          setReviews([]);
-        }
-      })
-      .catch((error) => {
-        console.error("Error getting reviews:", error);
-        toast({
-          title: "Error",
-          description: "Failed to get reviews",
-          variant: "destructive",
-        });
+  // Fetch reviews
+  const {
+    data: reviews,
+    isLoading: isReviewsLoading,
+    error: reviewsError,
+  } = useQuery<Review[]>({
+    queryKey: ["reviews", id],
+    queryFn: async () => {
+      const response = await fetch(`${apiUrl}/reviews/movie/${id}`);
+      if (!response.ok) throw new Error("Failed to fetch reviews");
+      const data = await response.json();
+      if (!Array.isArray(data)) throw new Error("Expected an array of reviews");
+      return data;
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to load reviews",
+        variant: "destructive",
       });
-  };
+    },
+  });
 
-  useEffect(() => {
-    fetchMovieDetails();
-    fetchReviews();
-  }, [id, toast]);
+  // Add review mutation
+  const addReviewMutation = useMutation({
+    mutationFn: async (reviewData: Omit<Review, "id" | "movieId">) => {
+      const response = await fetch(`${apiUrl}/reviews`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          movie_id: Number(id),
+          reviewer_name: reviewData.reviewer_name,
+          rating: reviewData.rating,
+          review_comments: reviewData.review_comments,
+        }),
+      });
+      if (!response.ok) throw new Error("Failed to add review");
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Success",
+        description: "Review added successfully",
+      });
+      setIsAddReviewOpen(false);
+      queryClient.invalidateQueries(["reviews", id]);
+      queryClient.invalidateQueries(["movie", id]); // Refetch movie details to update average_rating
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to add review",
+        variant: "destructive",
+      });
+    },
+  });
 
-  // Handle adding a new review
+  // Delete review mutation
+  const deleteReviewMutation = useMutation({
+    mutationFn: async (reviewId: string) => {
+      const response = await fetch(`${apiUrl}/reviews/${reviewId}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) throw new Error("Failed to delete review");
+      return reviewId;
+    },
+    onSuccess: (reviewId) => {
+      toast({
+        title: "Success",
+        description: "Review deleted successfully",
+      });
+      queryClient.invalidateQueries(["reviews", id]);
+      queryClient.invalidateQueries(["movie", id]); // Refetch movie details to update average_rating
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete review",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Edit review mutation
+  const editReviewMutation = useMutation({
+    mutationFn: async (updatedReview: Review) => {
+      const response = await fetch(`${apiUrl}/reviews/${updatedReview.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedReview),
+      });
+      if (!response.ok) throw new Error("Failed to update review");
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Review updated successfully",
+      });
+      setIsEditReviewOpen(false);
+      queryClient.invalidateQueries(["reviews", id]);
+      queryClient.invalidateQueries(["movie", id]); // Refetch movie details to update average_rating
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update review",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleAddReview = (reviewData: Omit<Review, "id" | "movieId">) => {
-    fetch(`${apiUrl}/reviews`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        movie_id: Number(id),
-        reviewer_name: reviewData.reviewer_name,
-        rating: reviewData.rating,
-        review_comments: reviewData.review_comments,
-      }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        setReviews((prevReviews) => [...prevReviews, data.review]);
-        toast({
-          title: "Success",
-          description: "Review added successfully",
-        });
-
-        // Refetch movie details to update the average_rating
-        fetchMovieDetails();
-      })
-      .catch((error) => {
-        console.error("Error adding review:", error);
-        toast({
-          title: "Error",
-          description: "Failed to add review",
-          variant: "destructive",
-        });
-      });
+    addReviewMutation.mutate(reviewData);
   };
 
-  // Handle deleting a review
   const handleDeleteReview = (reviewId: string) => {
-    fetch(`${apiUrl}/reviews/${reviewId}`, {
-      method: "DELETE",
-    })
-      .then(() => {
-        setReviews((prevReviews) =>
-          prevReviews.filter((review) => review.id !== reviewId)
-        );
-        fetchMovieDetails();
-        toast({
-          title: "Success",
-          description: "Review deleted successfully",
-        });
-      })
-      .catch((error) => {
-        console.error("Error deleting review:", error);
-        toast({
-          title: "Error",
-          description: "Failed to delete review",
-          variant: "destructive",
-        });
-      });
+    deleteReviewMutation.mutate(reviewId);
   };
 
   const handleEditReview = (review: Review) => {
@@ -134,19 +177,15 @@ const MovieDetails = () => {
   };
 
   const handleSaveReview = (updatedReview: Review) => {
-    setReviews((prevReviews) =>
-      prevReviews.map((review) =>
-        review.id === updatedReview.id ? updatedReview : review
-      )
-    );
-    fetchMovieDetails(); // Refetch movie details to update average_rating
+    editReviewMutation.mutate(updatedReview);
   };
 
-
-  console.log("Current movie state: ", movie);
+  if (isMovieLoading || isReviewsLoading) {
+    return <div>Loading...</div>;
+  }
 
   if (!movie) {
-    return <div>Loading...</div>;
+    return <div>Movie not found</div>;
   }
 
   return (
@@ -190,10 +229,10 @@ const MovieDetails = () => {
           </div>
 
           <div className="space-y-4 mt-8">
-            {reviews.length === 0 ? (
+            {reviews?.length === 0 ? (
               <p>No reviews yet. Be the first to leave a review!</p>
             ) : (
-              reviews.map((review) => (
+              reviews?.map((review) => (
                 <div
                   key={review.id}
                   className="bg-white rounded-lg p-6 shadow-sm space-y-2 border"
