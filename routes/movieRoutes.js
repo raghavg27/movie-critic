@@ -1,10 +1,9 @@
 // Imports
 const express = require("express");
-const { PrismaClient } = require("@prisma/client");
 
 // Initialisations
 const router = express.Router();
-const prisma = new PrismaClient();
+const prisma = require("../prisma/prismaClient");
 
 // Add a new movie
 router.post("/", async (req, res) => {
@@ -62,6 +61,7 @@ router.get("/", async (req, res) => {
     console.error("Error fetching movies:", error);
     res.status(500).json({
       error: "Failed to fetch movies",
+      message: `${error.message}`
     });
   }
 });
