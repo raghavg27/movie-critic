@@ -17,7 +17,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-const apiUrl = "https://movie-critic-zdx3.onrender.com";
+const apiUrl = "http://localhost:8080";
 
 interface ReviewFormProps {
   open: boolean;

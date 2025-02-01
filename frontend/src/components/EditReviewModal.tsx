@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Review } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
-const apiUrl = "https://movie-critic-zdx3.onrender.com";
+const apiUrl = "http://localhost:8080";
 
 interface EditReviewModalProps {
   open: boolean;

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Movie } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
-const apiUrl = "https://movie-critic-zdx3.onrender.com";
+const apiUrl = "http://localhost:8080";
 
 interface EditMovieModalProps {
   open: boolean;
