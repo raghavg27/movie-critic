@@ -163,9 +163,6 @@ export function EditReviewModal({
           </div>
 
           <div className="flex justify-end gap-4">
-            <Button variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
             <Button
               type="submit"
               disabled={updateReviewMutation.isPending} // Disable button while mutation is in progress

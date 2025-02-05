@@ -4,6 +4,9 @@ import { formatDate } from "@/lib/utils";
 import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Link } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+
+const apiUrl = "http://localhost:8080";
 
 interface MovieCardProps {
   movie: Movie;
@@ -16,8 +19,47 @@ export function MovieCard({ movie, onEdit, onDelete }: MovieCardProps) {
     ? Number(movie.average_rating).toFixed(2)
     : "N/A";
 
+  const queryClient = useQueryClient();
+
+  const prefetchReviews = async () => {
+    await queryClient.prefetchQuery({
+      queryKey: ["reviews", String(movie.id)],
+      queryFn: async () => {
+        try {
+          const response = await fetch(`${apiUrl}/reviews/movie/${movie.id}`);
+          if (!response.ok) throw new Error("Failed to fetch reviews");
+
+          const data = await response.json();
+          if (!Array.isArray(data))
+            throw new Error("Expected an array of reviews");
+
+          console.log(
+            `Prefetched reviews for movie ${movie.id}: , ${typeof movie.id}`,
+            data
+          );
+          return data;
+        } catch (error) {
+          console.error("Prefetch error:", error);
+          return [];
+        }
+      },
+      staleTime: 1000 * 60 * 5,
+      cacheTime: 1000 * 60 * 10,
+    });
+
+    // Verify if data is in cache
+    const cachedData = queryClient.getQueryData(["reviews", Number(movie.id)]);
+    console.log(
+      `Cached reviews in movie card for ${movie.id}:`,
+      cachedData
+    );
+  };
+
   return (
-    <Card className="bg-[#E0DEFD] p-6 space-y-4 hover:shadow-md transition-shadow duration-200">
+    <Card
+      className="bg-[#E0DEFD] p-6 space-y-4 hover:shadow-md transition-shadow duration-200"
+      onMouseEnter={prefetchReviews}
+    >
       <Link to={`/movie/${movie.id}`} className="block">
         <h3 className="text-xl font-semibold text-gray-800">{movie.name}</h3>
         <p className="text-sm text-gray-600 italic mt-1">

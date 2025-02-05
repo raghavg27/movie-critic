@@ -44,6 +44,10 @@ const MovieDetails = () => {
   });
 
   // Fetch reviews
+  const cachedReviews = queryClient.getQueryData(["reviews", id]);
+  console.log(`Cached reviews in details for ${id}:`, cachedReviews);
+  
+
   const {
     data: reviews,
     isLoading: isReviewsLoading,
@@ -51,22 +55,22 @@ const MovieDetails = () => {
   } = useQuery<Review[]>({
     queryKey: ["reviews", id],
     queryFn: async () => {
+      console.log(`Fetching fresh reviews for movie ${id}, ${typeof id}`);
+
       const response = await fetch(`${apiUrl}/reviews/movie/${id}`);
       if (!response.ok) throw new Error("Failed to fetch reviews");
+
       const data = await response.json();
       if (!Array.isArray(data)) throw new Error("Expected an array of reviews");
+
       return data;
     },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to load reviews",
-        variant: "destructive",
-      });
-    },
+    staleTime: 1000 * 60 * 5, // Keeps prefetched data fresh for 5 minutes
+    cacheTime: 1000 * 60 * 10, // Cache data even if unused
+    initialData: cachedReviews, // Use prefetched data if available
   });
 
-  // Add review mutation
+
   const addReviewMutation = useMutation({
     mutationFn: async (reviewData: Omit<Review, "id" | "movieId">) => {
       const response = await fetch(`${apiUrl}/reviews`, {
@@ -81,26 +85,74 @@ const MovieDetails = () => {
           review_comments: reviewData.review_comments,
         }),
       });
-      if (!response.ok) throw new Error("Failed to add review");
-      return response.json();
+
+      if (!response.ok) {
+        const errorMessage = await response.text();
+        throw new Error(errorMessage || "Failed to add review");
+      }
+
+      return await response.json(); // Ensure response is awaited
     },
-    onSuccess: (data) => {
+
+    onMutate: async (reviewData) => {
+      await queryClient.cancelQueries({ queryKey: ["reviews", id] });
+
+      const previousReviews = queryClient.getQueryData(["reviews", id]);
+
+      const optimisticReview = {
+        id: `temp-${Math.random().toString(36).substr(2, 9)}`, // Temporary unique ID
+        movieId: Number(id),
+        reviewer_name: reviewData.reviewer_name,
+        rating: reviewData.rating,
+        review_comments: reviewData.review_comments,
+      };
+
+      queryClient.setQueryData(["reviews", id], (oldReviews = []) => {
+        return [...oldReviews, optimisticReview]; // Add optimistic review
+      });
+
+      return { previousReviews };
+    },
+
+    onSuccess: (newReview) => {
       toast({
         title: "Success",
         description: "Review added successfully",
       });
+
+      queryClient.setQueryData(["reviews", id], (oldReviews = []) => {
+        return oldReviews.map((review) =>
+          typeof review.id === "string" && review.id.startsWith("temp-")
+            ? newReview // Replace the optimistic review with the actual review
+            : review
+        );
+      });
+
       setIsAddReviewOpen(false);
-      queryClient.invalidateQueries(["reviews", id]);
-      queryClient.invalidateQueries(["movie", id]); // Refetch movie details to update average_rating
+      queryClient.invalidateQueries(["movie", id]); // Only refetch movie details if needed
     },
-    onError: (error) => {
+
+    onError: (error, _, context) => {
+      console.error("Error adding review:", error);
+
       toast({
         title: "Error",
-        description: "Failed to add review",
+        description: error.message || "Failed to add review",
         variant: "destructive",
       });
+
+      if (context?.previousReviews) {
+        queryClient.setQueryData(["reviews", id], context.previousReviews); // Restore state
+      }
+    },
+
+    onSettled: () => {
+      queryClient.invalidateQueries(["reviews", id]);
+      queryClient.invalidateQueries(["movie", id]);
     },
   });
+
+
 
   // Delete review mutation
   const deleteReviewMutation = useMutation({
@@ -108,25 +160,60 @@ const MovieDetails = () => {
       const response = await fetch(`${apiUrl}/reviews/${reviewId}`, {
         method: "DELETE",
       });
-      if (!response.ok) throw new Error("Failed to delete review");
+
+      if (!response.ok) {
+        const errorMessage = await response.text(); // Fetch error message if available
+        throw new Error(errorMessage || "Failed to delete review");
+      }
+
       return reviewId;
     },
+
+    onMutate: async (reviewId) => {
+      await queryClient.cancelQueries({ queryKey: ["reviews", id] });
+
+      const previousReviews = queryClient.getQueryData(["reviews", id]);
+
+      queryClient.setQueryData(["reviews", id], (oldReviews: any) => {
+        return oldReviews?.filter((review) => review.id !== reviewId) || [];
+      });
+
+      return { previousReviews };
+    },
+
     onSuccess: (reviewId) => {
       toast({
         title: "Success",
         description: "Review deleted successfully",
       });
-      queryClient.invalidateQueries(["reviews", id]);
-      queryClient.invalidateQueries(["movie", id]); // Refetch movie details to update average_rating
+
+      queryClient.setQueryData(["reviews", id], (oldReviews: any) => {
+        return oldReviews.filter((review) => review.id !== reviewId);
+      });
+
+      queryClient.invalidateQueries(["movie", id]); // Refetch movie details
     },
-    onError: (error) => {
+
+    onError: (error, _, context) => {
+      console.error("Error deleting review:", error);
+
       toast({
         title: "Error",
-        description: "Failed to delete review",
+        description: error.message || "Failed to delete review",
         variant: "destructive",
       });
+
+      if (context?.previousReviews) {
+        queryClient.setQueryData(["reviews", id], context.previousReviews); // Restore state
+      }
+    },
+
+    onSettled: () => {
+      queryClient.invalidateQueries(["reviews", id]);
+      queryClient.invalidateQueries(["movie", id]);
     },
   });
+
 
   const handleAddReview = (reviewData: Omit<Review, "id" | "movieId">) => {
     addReviewMutation.mutate(reviewData);
@@ -193,9 +280,9 @@ const MovieDetails = () => {
             {reviews?.length === 0 ? (
               <p>No reviews yet. Be the first to leave a review!</p>
             ) : (
-              reviews?.map((review) => (
+              reviews?.map((review, index) => (
                 <div
-                  key={review.id}
+                  key={review.id || `temp-${index}`}
                   className="bg-white rounded-lg p-6 shadow-sm space-y-2 border"
                 >
                   <div className="flex justify-between items-start">
@@ -252,7 +339,7 @@ const MovieDetails = () => {
               setCurrentReview(null); // Reset the current review
             }}
             review={currentReview}
-            onSave={(updatedReview) =>{
+            onSave={(updatedReview) => {
               // Invalidate queries to refetch data
               queryClient.invalidateQueries(["reviews", id]);
               queryClient.invalidateQueries(["movie", id]);
