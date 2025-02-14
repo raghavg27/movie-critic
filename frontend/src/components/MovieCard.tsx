@@ -6,7 +6,7 @@ import { Button } from "./ui/button";
 import { Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 
-const apiUrl = "http://localhost:8080";
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
 interface MovieCardProps {
   movie: Movie;

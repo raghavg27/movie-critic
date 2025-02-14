@@ -19,7 +19,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 
-const apiUrl = "http://localhost:8080";
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
 interface ReviewFormProps {
   open: boolean;

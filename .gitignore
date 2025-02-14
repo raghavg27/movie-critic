@@ -12,3 +12,5 @@ npm-debug.log*
 
 # Environment file
 .env
+.env.development
+.env.production

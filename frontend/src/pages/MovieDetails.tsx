@@ -9,7 +9,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { EditReviewModal } from "@/components/EditReviewModal";
 import { MovieForm } from "@/components/MovieForm";
 
-const apiUrl = "http://localhost:8080";
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
 const MovieDetails = () => {
   const { id } = useParams<{ id: string }>();

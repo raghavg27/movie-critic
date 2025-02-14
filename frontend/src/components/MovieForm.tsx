@@ -11,7 +11,7 @@ import { Movie } from "@/types";
 import { useState } from "react";
 import { useToast } from "./ui/use-toast";
 
-const apiUrl = "http://localhost:8080";
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
 interface MovieFormProps {
   open: boolean;

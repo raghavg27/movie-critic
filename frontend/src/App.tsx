@@ -11,7 +11,7 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ReactQueryDevtools initialIsOpen={true} position="bottom-left" />
+    <ReactQueryDevtools initialIsOpen={false} position="bottom-left" />
     <TooltipProvider>
       <Toaster />
       <Sonner />

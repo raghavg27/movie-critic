@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Movie } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
 
-const apiUrl = "http://localhost:8080";
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
 interface EditMovieModalProps {
   open: boolean;

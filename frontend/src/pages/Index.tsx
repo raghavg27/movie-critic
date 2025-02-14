@@ -9,8 +9,16 @@ import { Search } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { EditMovieModal } from "@/components/EditMovieModal";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import SkeletonMovieCard from "@/components/SkeletonMovieCard";
 
-const apiUrl = "http://localhost:8080";
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
+
+// Generate unique placeholder movies
+const placeholderMovies: Movie[] = Array.from({ length: 3  }, (_, index) => ({
+  id: `placeholder-${index}`, // Unique ID for each placeholder
+  name: "Loading...",
+  average_rating: 0,
+}));
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -23,6 +31,7 @@ const Index = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Fetch movies with placeholder data
   const {
     data: movies,
     error,
@@ -34,7 +43,8 @@ const Index = () => {
       if (!response.ok) throw new Error("Failed to fetch movies");
       return response.json();
     },
-    onError: (error) => {
+    placeholderData: () => placeholderMovies, // Temporary data while loading
+    onError: () => {
       toast({
         title: "Error",
         description: "Failed to load movies",
@@ -43,7 +53,7 @@ const Index = () => {
     },
   });
 
-  // Automatically refetch movies when isAddMovieOpen, isAddReviewOpen, or isDeleteMovie changes
+  // Auto refetch movies when add/delete state changes
   useEffect(() => {
     queryClient.invalidateQueries(["movies"]);
   }, [isAddMovieOpen, isAddReviewOpen, isDeleteMovie, queryClient]);
@@ -53,7 +63,7 @@ const Index = () => {
       movie.name.toLowerCase().includes(searchQuery.toLowerCase())
     ) || [];
 
-  // Handle adding a new review
+  // Add Review Mutation
   const addReviewMutation = useMutation({
     mutationFn: async (reviewData: Omit<Movie, "id" | "movieId">) => {
       const response = await fetch(`${apiUrl}/reviews`, {
@@ -67,15 +77,11 @@ const Index = () => {
       return response.json();
     },
     onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Review added successfully",
-      });
+      toast({ title: "Success", description: "Review added successfully" });
       setIsAddReviewOpen(false);
       queryClient.invalidateQueries(["movies"]);
     },
-    onError: (error) => {
-      console.error("Error adding review:", error);
+    onError: () => {
       toast({
         title: "Error",
         description: "Failed to add review",
@@ -84,11 +90,11 @@ const Index = () => {
     },
   });
 
-  const handleAddReview = async (reviewData: Omit<Movie, "id" | "movieId">) => {
+  const handleAddReview = (reviewData: Omit<Movie, "id" | "movieId">) => {
     addReviewMutation.mutate(reviewData);
   };
 
-  // Delete movie
+  // Delete Movie Mutation
   const deleteMovieMutation = useMutation({
     mutationFn: async (id: string) => {
       const response = await fetch(`${apiUrl}/movies/${id}`, {
@@ -97,16 +103,12 @@ const Index = () => {
       if (!response.ok) throw new Error("Failed to delete movie");
       return id;
     },
-    onSuccess: (id) => {
-      toast({
-        title: "Success",
-        description: "Deleted movie",
-      });
+    onSuccess: () => {
+      toast({ title: "Success", description: "Movie deleted successfully" });
       setIsDeleteMovie(true);
       queryClient.invalidateQueries(["movies"]);
     },
-    onError: (error) => {
-      console.error("Error deleting movie:", error);
+    onError: () => {
       toast({
         title: "Error",
         description: "Failed to delete movie",
@@ -115,7 +117,7 @@ const Index = () => {
     },
   });
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     deleteMovieMutation.mutate(id);
   };
 
@@ -124,9 +126,13 @@ const Index = () => {
     setIsEditModalOpen(true);
   };
 
-  const handleSaveMovie = (updatedMovie: Movie) => {
-   queryClient.invalidateQueries(["movies"]);
+  const handleSaveMovie = () => {
+    queryClient.invalidateQueries(["movies"]);
   };
+
+  // Determine whether to show placeholders or real data
+  const showPlaceholders = isLoading;
+  const displayMovies = showPlaceholders ? placeholderMovies : filteredMovies;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -167,31 +173,26 @@ const Index = () => {
             />
           </div>
 
-          {isLoading ? (
-            <p className="text-center text-gray-500 mt-8">Loading...</p>
-          ) : filteredMovies.length === 0 ? (
-            <p className="text-center text-gray-500 mt-8">
-              Free instance spins down with inactivity, which can delay requests
-              by 50 seconds or more. Please Wait.
-            </p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredMovies.map((movie) => (
-                <MovieCard
-                  key={movie.id}
-                  movie={movie}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                />
-              ))}
-            </div>
-          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {showPlaceholders
+              ? placeholderMovies.map((movie) => (
+                  <SkeletonMovieCard key={movie.id} />
+                ))
+              : displayMovies.map((movie) => (
+                  <MovieCard
+                    key={movie.id}
+                    movie={movie}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                  />
+                ))}
+          </div>
         </div>
 
         <MovieForm
           open={isAddMovieOpen}
           onOpenChange={setIsAddMovieOpen}
-          onSubmit={(movieData) => {}}
+          onSubmit={() => {}}
         />
 
         <ReviewForm

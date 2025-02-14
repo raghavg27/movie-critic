@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Review } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
 
-const apiUrl = "http://localhost:8080";
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
 interface EditReviewModalProps {
   open: boolean;
