@@ -18,8 +18,9 @@ You can check out the live demo - https://movie-critic-opal.vercel.app/.
 Install movie-critic backend server with npm
 
 ```bash
+  cd server
   npm install
-  npm run start
+  npm run dev
 ```
     
 ## Deployment
